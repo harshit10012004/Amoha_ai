@@ -154,3 +154,94 @@ result = analyze_care_log(
 - **Purple:** Design the login screen (email + OTP).
 
 > *"Together, we build a bridge of care for dementia patients in the North East."* - Team Amoha
+
+---
+
+# 📄 AI/ML Subsystem Description (from Libraries & Research PDFs)
+
+## 🧠 ML Architecture at a Glance
+A gamified cognitive-support web app for people living with dementia. The AI layer does **not** diagnose dementia or claim to measure disease progression — it learns *behavioral patterns* and personalizes assistance (reminders, game difficulty, activity recommendations) within strict safety boundaries.
+
+```
+Flutter App --> FastAPI API --> Data Collection
+   |                              |
+   v                              v
+Task/Game Events           User Preferences
+   |                              |
+   v------------------------------v
+      pandas + NumPy (clean/features)
+                    |
+              ML Feature Store
+         /        |        \
+  Forgetting   Difficulty  Recommendation
+    Model       Model       Model
+         \        |        /
+      Personalization Engine
+         /        |        \
+  Reminder      Game      Daily Plan
+   Timing    Selection    Selection
+         \        |        /
+               User --> new data --> ML Pipeline
+```
+
+## 📦 Core Library Stack
+| Library | Role | Priority |
+|---------|------|----------|
+| NumPy | Numerical computing | Essential |
+| pandas | Behavioral data & feature engineering | Essential |
+| scikit-learn | Primary ML models | Essential |
+| SciPy | Statistics/optimization | Optional |
+| Matplotlib / Seaborn | Visualization & EDA | Recommended |
+| SHAP | Explainable AI | Recommended |
+| Joblib | Model persistence | Recommended |
+| PyTorch | Advanced sequence/image/speech AI | Later/Optional |
+| MLflow | Experiment tracking | Optional/Advanced |
+
+## 🧠 Three ML Components
+1. **Assistance / Forgetting-pattern model** — inputs: task category, completion rate, missed rate, response delay, reminder count, recent & historical performance, time-of-day behavior. Output: an *assistance probability* used only for personalization (never a diagnosis).
+2. **Adaptive Difficulty model** — uses game accuracy, completion time, mistakes, attempts, recent performance to recommend a small, gradual difficulty adjustment.
+3. **Recommendation engine** — recommends the next activity from preferences, recent performance, task importance, missed tasks, recent activity, and time of day.
+
+## 🔁 Data Pipeline
+event collection → validation → privacy filtering → pandas/NumPy preprocessing → feature engineering → model inference → explanation → personalization → reminder/game/task recommendation → user feedback → new event data.
+
+## ⚖️ Design Safety
+- **No diagnosis / no disease-progression claims** — behavioral support only; clinicians stay responsible for medical decisions.
+- **Continuous learning safely** — update user stats in real time, but retrain models *periodically* and only deploy if validated as better/safe.
+- **Cold-start** — use caregiver-provided preferences + safe default rules until enough history exists.
+- **Feedback-loop prevention** — controlled exploration of alternative activities; avoid auto-increasing reminders on a single miss.
+
+## 🧬 Research-Backed Risk Signals (Dementia Prediction)
+From the dementia research, strongly correlated features to inform risk signals:
+- **Cognitive test scores** — strong negative correlation (-0.84).
+- **Diabetes** — most common comorbidity among dementia patients.
+- **APOE-ε4 allele** — significant genetic risk factor.
+- **Family history** — nearly evenly split (48.6% vs 51.4%), so not definitive alone.
+- **LDA** achieved the highest testing accuracy (98%); ML models averaged 95.39% vs hybrid CNN-RNN's 92.23%.
+
+## 🧩 Suggested ML Project Structure
+```
+ml/
+├── data/            (raw/ + processed/)
+├── features/        (feature_engineering.py)
+├── models/          (forgetting_model.py, difficulty_model.py, recommendation_model.py)
+├── training/        (train_forgetting.py, evaluate.py)
+├── inference/       (predictor.py)
+├── explainability/  (shap_explanations.py)
+└── utils/           (preprocessing.py)
+```
+
+## 🗓️ Development Roadmap
+1. Collect task/game events → dataset (pandas, NumPy)
+2. Baseline behavioral statistics (pandas, NumPy)
+3. Assistance classifier (scikit-learn)
+4. Adaptive difficulty (scikit-learn + rules)
+5. Recommendation engine (scikit-learn / weighted scoring)
+6. Explainability (SHAP)
+7. Save/deploy models (Joblib)
+8. Evaluate with held-out data (scikit-learn, Matplotlib)
+9. Advanced seq/image/speech AI if justified (PyTorch)
+10. Model experiment tracking (MLflow)
+
+## 🎯 Best Architecture for the MVP
+Start with **NumPy + pandas + scikit-learn + Matplotlib + Joblib + SHAP** — a complete pipeline without unnecessary complexity. Add PyTorch only when a clear advanced use case and enough data exist.

@@ -1,0 +1,90 @@
+================================================================
+ AMOHA - GREEN (AI/ML) TASK LIST
+ Team Mustangs | Role: Green - AI/ML & Personalization Lead
+================================================================
+
+Based on: "Libraries for SIH.pdf" + "Research on Dementia.pdf" (by Nitish Kumar - Red)
+
+--------------------------------------------------------------
+ HIGH PRIORITY
+--------------------------------------------------------------
+[ ] 1. Upgrade brain.py — beyond keyword matching.
+     Accept structured behavioral features:
+     completion_rate, missed_rate, response_delay, reminder_count,
+     game_accuracy, avg_game_time, recent_accuracy, time_of_day
+
+[ ] 2. Create modular ml/ folder structure:
+     ml/data/, ml/features/, ml/models/, ml/training/,
+     ml/inference/, ml/explainability/, ml/utils/
+
+[ ] 3. Add baseline ML stack to requirements.txt:
+     numpy, pandas, scikit-learn, scipy, matplotlib,
+     shap, joblib, pydantic
+
+[ ] 4. Build feature_engineering.py (pandas + NumPy)
+
+[ ] 5. Implement Assistance/Forgetting-pattern model
+     (Logistic Regression / Random Forest)
+     -> outputs an ASSISTANCE PROBABILITY only (never a diagnosis)
+
+[ ] 6. Build predictor.py inference API + joblib persistence
+     (so Yellow can call it)
+
+--------------------------------------------------------------
+ MEDIUM PRIORITY
+--------------------------------------------------------------
+[ ] 7. Adaptive Difficulty model
+     (start rule-based controller, later scikit-learn)
+
+[ ] 8. Recommendation engine
+     (MVP: weighted scoring; later compare with learned model)
+
+[ ] 9. Cold-start handling
+     (caregiver-defined defaults + baseline difficulty when
+     no history exists)
+
+[ ] 10. Feedback-loop prevention
+     (controlled exploration of alternatives; no auto-increase
+     of reminders on a single miss)
+
+[ ] 11. Model evaluation
+     (precision, recall, F1, ROC-AUC, confusion matrix)
+     + training/eval scripts with held-out data
+
+[ ] 12. Tests + example synthetic dataset + documentation
+     for every feature and model
+
+[ ] 13. Keep analyze_care_log(text, accuracy) contract working
+     + add alert_level risk output (cognitive score, diabetes,
+     APOE risk signals)
+
+--------------------------------------------------------------
+ LOW PRIORITY
+--------------------------------------------------------------
+[ ] 14. SHAP explainability module
+     (caregiver-facing explanations, not clinical conclusions)
+
+--------------------------------------------------------------
+ SAFETY BOUNDARY (IMPORTANT)
+--------------------------------------------------------------
+- The ML system is a cognitive-support / routine-personalization
+  tool. It must NOT diagnose dementia, estimate disease severity,
+  or make medical decisions.
+- Caregivers and qualified clinicians remain responsible for all
+  medical decisions.
+- Use privacy-by-design (behavioral + health data is sensitive).
+
+--------------------------------------------------------------
+ KEY RESEARCH INSIGHTS (for feature/risk signals)
+--------------------------------------------------------------
+- Cognitive test scores: strong NEGATIVE correlation (-0.84)
+- Diabetes: most common comorbidity among dementia patients
+- APOE-epsilon4 allele: significant genetic risk factor
+- Family history alone: NOT definitive (48.6% vs 51.4%)
+- Best-performing ML model: LDA (98% testing accuracy)
+- ML models averaged 95.39% vs hybrid CNN-RNN 92.23%
+  -> classical ML is preferred for MVP over deep learning
+
+--------------------------------------------------------------
+ GOAL: A working demo link combining all modules by Sept 11.
+================================================================
