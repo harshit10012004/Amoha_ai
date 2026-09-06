@@ -13,14 +13,14 @@ It replaces 5+ scattered apps with **1 simple link** that works on low-end phone
 
 Our team works together like LEGO blocks — each member owns a distinct color-coded role.
 
-| Color | Role | What They Own |
-|-------|------|---------------|
-| 🔴 **Red** | Project Lead & Integration | Keeps everyone on track, manages deadlines, integrates all modules |
-| 🟠 **Orange** | Frontend & UI/UX Lead | Builds the simple, big-button, voice-guided screens |
-| 🟡 **Yellow** | Backend & Database Lead | Builds APIs and data plumbing (PostgreSQL, FastAPI) |
-| 🟢 **Green** | AI/ML & Personalization Lead | Builds the "brain" that reads text and gives suggestions |
-| 🔵 **Blue** | Offline & Connectivity Lead | Makes the app work without internet + background sync |
-| 🟣 **Purple** | Security & Compliance Lead | Protects patient data, OTP login, PDPP Act compliance |
+| Member | Color | Role | What They Own |
+|--------|-------|------|---------------|
+| Nitish Kumar | 🔴 **Red** | Project Lead & Integration | Keeps everyone on track, manages deadlines, integrates all modules |
+| Yash | 🟠 **Orange** | Frontend & UI/UX Lead | Builds the simple, big-button, voice-guided screens |
+| Harsh | 🟡 **Yellow** | Backend & Database Lead | Builds APIs and data plumbing (PostgreSQL, FastAPI) |
+| Harshit Sharma | 🟢 **Green** | AI/ML & Personalization Lead | Builds the "brain" that reads text and gives suggestions |
+| Aathish | 🔵 **Blue** | Offline & Connectivity Lead | Makes the app work without internet + background sync |
+| Ashwika Jain | 🟣 **Purple** | Security & Compliance Lead | Protects patient data, OTP login, PDPP Act compliance |
 
 ---
 
