@@ -10,9 +10,11 @@ You are the **Brain of Amoha**. You do NOT build the app UI, database, or authen
 
 ## 📁 Folder Structure
 Create and use ONLY this folder:
-/SIH/amoha_ai/
+/SIH/amoha_ai/Green module/
 ├── data/
 │ └── keywords.json
 ├── brain.py
 ├── test_brain.py
+├── agent_green.md
+├── green_tasks.txt
 └── README_GREEN.md
