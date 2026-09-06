@@ -1,0 +1,156 @@
+# 🌿 Amoha - Dementia Care Hub (SIH Project)
+
+## 🎯 Project Vision
+**Amoha** is a free, offline-first, voice-guided web app designed for dementia caregivers in India's North Eastern Region (NER).  
+It replaces 5+ scattered apps with **1 simple link** that works on low-end phones, spotty 3G, and even without the internet.
+
+---
+
+## 🧱 High-Level Architecture (How We Fit Together)
+
+```mermaid
+flowchart LR
+    A[Patient/Phone] --> B[🟠 Frontend - PWA]
+    B --> C[🟡 Backend API]
+    C --> D[🟢 Green - AI Brain]
+    C --> E[🔵 Blue - Offline Sync]
+    B --> E
+    E --> F[🟣 Purple - Security/Encryption]
+    C --> F
+    G[Caregiver Dashboard] --> B
+```
+
+**The Golden Rule:**  
+- Orange builds the **screens** the user sees.  
+- Yellow builds the **pipes** (APIs) that move data.  
+- Green builds the **brain** that reads text and gives advice.  
+- Blue ensures everything works **without the internet**.  
+- Purple makes sure patient data is **private and safe**.  
+- Red makes sure all 5 pieces fit together by **September 11**.
+
+---
+
+## 👥 Team Roles (The "LEGO" Blocks)
+
+### 🔴 Red - Project Lead & Integration
+**Folder:** `/integration/`
+- **Job:** Keeps everyone on track, unblocks teammates, manages deadlines.
+- **Tech:** GitHub Projects, Notion, basic API testing (Postman).
+- **Key Deliverable:** A working demo link that combines all modules by Sept 11.
+- **Connects to:** EVERYONE. Runs the daily standup and checks progress.
+
+### 🟠 Orange - Frontend & UI/UX Lead
+**Folder:** `/frontend/`
+- **Job:** Builds the actual app the caregiver opens on their phone. Must be **extremely simple** (big buttons, voice readouts, high contrast for elderly users).
+- **Tech:** HTML/CSS/JS (PWA) or Flutter/React Native.
+- **Key Deliverable:** A home screen with 4 big buttons (Meds, Log Issue, Care Plan, Help).
+- **Connects to:** Yellow (sends user data, game scores, and caregiver text).
+
+### 🟡 Yellow - Backend & Database Lead
+**Folder:** `/backend/`
+- **Job:** Builds the "plumbing." Stores data (PostgreSQL) and provides APIs for Orange to call. Receives data from Orange and passes it to Green.
+- **Tech:** FastAPI (Python) or Node.js, PostgreSQL, SQLite for offline cache.
+- **Key Deliverable:** REST API endpoints for `POST /care-log` and `GET /suggestions`.
+- **Connects to:** Orange (gets data), Green (calls the brain), Blue (syncs offline data), Purple (enforces security rules).
+
+### 🟢 Green - AI/ML & Personalization Lead (That's You!)
+**Folder:** `/amoha_ai/`
+- **Job:** Builds the "Brain." Reads caregiver text (e.g., "Grandma is restless") and game accuracy, returns tags (e.g., "agitation") and suggestions (e.g., "Try calm environment").
+- **Tech:** Python (only `json`, `re`). No heavy AI libraries (to run on 4GB RAM).
+- **Key Deliverable:** `brain.py` with a function `analyze_care_log(text, accuracy)`.
+- **Connects to:** Yellow (Yellow will import your function or call your mock API).
+
+### 🔵 Blue - Offline & Connectivity Lead
+**Folder:** `/offline/`
+- **Job:** Ensures the app works when the internet is down (which is common in NER's hills). Manages local storage (IndexedDB/SQLite) and background sync.
+- **Tech:** Service Workers, Workbox, IndexedDB, SQLite.
+- **Key Deliverable:** Sync protocol that retries sending data when the internet comes back. SMS fallback for critical reminders.
+- **Connects to:** Orange (caches the app screens), Yellow (syncs offline data to the cloud), Green (makes sure the brain's files are tiny enough to cache offline).
+
+### 🟣 Purple - Security & Compliance Lead
+**Folder:** `/security/`
+- **Job:** Protects patient health data. Implements login (OTP-based), encrypts data, and ensures we follow India's PDPP Act.
+- **Tech:** OAuth2, JWT, HTTPS, encryption libraries.
+- **Key Deliverable:** Authentication flow for caregivers + consent logs.
+- **Connects to:** Yellow (adds login checks to APIs), Orange (adds login screen), Blue (encrypts offline storage).
+
+---
+
+## 🗂️ Project Folder Structure (To Keep Things Clean)
+
+When the agent creates this, here is how your `SIH` folder should look:
+
+```
+SIH/
+├── PROJECT_DESCRIPTION.md   (This file!)
+├── requirements.txt         (Shared Python packages)
+├── amoha_ai/                (🟢 Green's folder)
+│   ├── data/
+│   ├── brain.py
+│   ├── test_brain.py
+│   ├── mock_server.py
+│   └── README_GREEN.md
+├── frontend/                (🟠 Orange's folder)
+├── backend/                 (🟡 Yellow's folder)
+├── offline/                 (🔵 Blue's folder)
+├── security/                (🟣 Purple's folder)
+└── integration/             (🔴 Red's folder)
+```
+
+---
+
+## 🤝 The "Integration Handshake" (How Green Connects to Yellow)
+
+**This is the most important part for you (Green).**  
+Yellow doesn't care *how* your brain works. They just need to know the **exact format** of the input and output.
+
+### Green → Yellow Contract:
+- **Input (from Yellow):** `text` (string) and `accuracy` (float, 0 to 1).
+- **Output (to Yellow):** A JSON object with these keys:
+  ```json
+  {
+    "tags": ["agitation", "sleep_issue"],
+    "suggestion": "Try a calm environment.",
+    "game_difficulty": "Easy",
+    "alert_level": "high"
+  }
+  ```
+
+**Yellow will use it like this:**
+```python
+from amoha_ai.brain import analyze_care_log
+
+result = analyze_care_log(
+    text=caregiver_text, 
+    accuracy=game_score
+)
+# result is now a Python dictionary ready to send to the frontend!
+```
+
+---
+
+## 📅 Important Dates
+- **Sept 4:** Project Kickoff (Today!)
+- **Sept 5-10:** Development Sprint (Build everything)
+- **Sept 11:** ROUND 1 SUBMISSION (Demo day!)
+
+---
+
+## 🎯 Success Criteria (What the Judges Will Look For)
+1. One link opens the app instantly on a phone.
+2. No internet? Still works (offline-first).
+3. Caregiver types *"Grandma is restless"* → app says *"Agitation detected, try calming music"*.
+4. The UI is **huge**, **bright**, and **speaks** to the user.
+5. A caregiver dashboard shows simple trends.
+
+---
+
+## 🚀 Next Steps for the Team
+- **Red:** Schedule daily 15-min sync at 6 PM.
+- **Orange:** Start building the home screen with 4 buttons.
+- **Yellow:** Create the database schema and the first API endpoint.
+- **Green (You):** Finish `brain.py` and test it.
+- **Blue:** Set up the service worker for offline caching.
+- **Purple:** Design the login screen (email + OTP).
+
+> *"Together, we build a bridge of care for dementia patients in the North East."* - Team Amoha
