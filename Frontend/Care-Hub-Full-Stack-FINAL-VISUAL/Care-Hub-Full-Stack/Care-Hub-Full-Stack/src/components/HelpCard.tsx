@@ -1,0 +1,1 @@
+import {ChevronRight} from "lucide-react"; export default function HelpCard({title,emoji,onClick}:{title:string;emoji:string;onClick:()=>void}){return <button className="help-card" onClick={onClick}><span>{emoji}</span><b>{title}</b><ChevronRight/></button>}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" fill="none">
+<defs>
+  <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1230 180) rotate(130) scale(420)"><stop stop-color="#79D6C6" stop-opacity=".55"/><stop offset="1" stop-color="#79D6C6" stop-opacity="0"/></radialGradient>
+  <radialGradient id="b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(230 820) rotate(-20) scale(360)"><stop stop-color="#8CB7FF" stop-opacity=".28"/><stop offset="1" stop-color="#8CB7FF" stop-opacity="0"/></radialGradient>
+  <linearGradient id="c" x1="960" y1="90" x2="1320" y2="420" gradientUnits="userSpaceOnUse"><stop stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#9BE2D4" stop-opacity=".18"/></linearGradient>
+  <filter id="blur"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+<circle cx="1230" cy="180" r="420" fill="url(#a)"/>
+<circle cx="230" cy="820" r="360" fill="url(#b)"/>
+<path d="M1060 30C1210 70 1370 30 1490 130C1600 222 1550 390 1430 430C1290 477 1130 390 1085 270C1050 178 1010 77 1060 30Z" fill="url(#c)" filter="url(#blur)"/>
+<path d="M160 720C260 650 420 675 490 770C560 865 470 955 340 960C210 965 60 900 70 810C76 765 108 742 160 720Z" fill="#79D6C6" fill-opacity=".08"/>
+</svg>

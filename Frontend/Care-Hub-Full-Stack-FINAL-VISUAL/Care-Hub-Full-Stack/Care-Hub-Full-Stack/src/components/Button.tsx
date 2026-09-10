@@ -1,0 +1,2 @@
+import type {ButtonHTMLAttributes,ReactNode} from "react";
+export default function Button({children,variant="primary",...p}:{children:ReactNode;variant?:"primary"|"secondary"|"danger"}&ButtonHTMLAttributes<HTMLButtonElement>){return <button className={`btn ${variant}`} {...p}>{children}</button>}

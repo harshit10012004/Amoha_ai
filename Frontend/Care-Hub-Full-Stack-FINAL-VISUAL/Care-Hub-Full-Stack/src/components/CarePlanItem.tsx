@@ -1,0 +1,2 @@
+import {Check} from "lucide-react"; import type {CarePlanItem as Item} from "../types";
+export default function CarePlanItem({item,onClick}:{item:Item;onClick:()=>void}){return <button className={`plan-item ${item.completed?"completed":""}`} onClick={onClick}><span className="checkbox">{item.completed&&<Check/>}</span><span>{item.title}</span></button>}

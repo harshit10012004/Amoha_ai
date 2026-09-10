@@ -1,0 +1,2 @@
+import {Cloud,CloudOff,RefreshCw} from "lucide-react";
+export default function SyncStatus({online,failed=false,onRetry}:{online:boolean;failed?:boolean;onRetry?:()=>void}){if(failed)return <div className="sync failed"><CloudOff/> Sync Failed <button onClick={onRetry}>Retry</button></div>;return <div className="sync">{online?<Cloud/>:<CloudOff/>} {online?"Ready to sync":"Saved Offline"}</div>}

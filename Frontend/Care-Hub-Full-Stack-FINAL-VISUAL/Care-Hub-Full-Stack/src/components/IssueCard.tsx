@@ -1,0 +1,1 @@
+export default function IssueCard({label,emoji,selected,onClick}:{label:string;emoji:string;selected:boolean;onClick:()=>void}){return <button className={`issue-card ${selected?"selected":""}`} onClick={onClick}><span>{emoji}</span><b>{label}</b></button>}

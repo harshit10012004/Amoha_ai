@@ -1,0 +1,2 @@
+import {CloudOff} from "lucide-react"; import {useTranslation} from "react-i18next";
+export default function OfflineIndicator(){const {t}=useTranslation();return <div className="offline-banner"><CloudOff/><span>{t("offline")}</span></div>}

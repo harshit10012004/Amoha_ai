@@ -1,0 +1,116 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Meena Sharma",
+      "phone": "9876543210",
+      "role": "recipient",
+      "language": "en",
+      "caregiverIds": [
+        "u2"
+      ]
+    },
+    {
+      "id": "u2",
+      "name": "Rahul Sharma",
+      "phone": "9876543211",
+      "role": "caregiver",
+      "language": "en",
+      "caregiverIds": [
+        "u1"
+      ]
+    }
+  ],
+  "medicines": [
+    {
+      "id": 1,
+      "userId": "u1",
+      "name": "Donepezil",
+      "time": "08:00 AM",
+      "dosage": "1 tablet",
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "userId": "u1",
+      "name": "Medicine B",
+      "time": "08:00 PM",
+      "dosage": "1 tablet",
+      "status": "pending"
+    }
+  ],
+  "carePlan": [
+    {
+      "id": 1,
+      "userId": "u1",
+      "title": "Give morning medicine",
+      "completed": false
+    },
+    {
+      "id": 2,
+      "userId": "u1",
+      "title": "Help with breakfast",
+      "completed": false
+    },
+    {
+      "id": 3,
+      "userId": "u1",
+      "title": "20 minute walk",
+      "completed": false
+    },
+    {
+      "id": 4,
+      "userId": "u1",
+      "title": "Check hydration",
+      "completed": false
+    },
+    {
+      "id": 5,
+      "userId": "u1",
+      "title": "Evening medicine",
+      "completed": false
+    }
+  ],
+  "careLogs": [],
+  "reminders": [
+    {
+      "id": 1,
+      "userId": "u1",
+      "title": "Evening medicine",
+      "time": "08:00 PM",
+      "enabled": true
+    }
+  ],
+  "notifications": [],
+  "otp": {},
+  "aboutMe": [
+    {
+      "userId": "u1",
+      "name": "Meena Sharma",
+      "favoriteMusic": "90s Bollywood",
+      "likes": "Morning tea, gardening, cricket",
+      "dislikes": "Loud noises, crowded places",
+      "helps": "Speak slowly. Give one instruction at a time."
+    }
+  ],
+  "memories": [
+    {
+      "id": 1,
+      "userId": "u1",
+      "title": "Family Time",
+      "person": "Rahul & family",
+      "year": "1998",
+      "story": "A happy family celebration.",
+      "image": "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=700&q=80"
+    },
+    {
+      "id": 2,
+      "userId": "u1",
+      "title": "A Favorite Place",
+      "person": "The old garden",
+      "year": "2001",
+      "story": "A peaceful place for tea and conversation.",
+      "image": "https://images.unsplash.com/photo-1558521958-0a228e77e984?auto=format&fit=crop&w=700&q=80"
+    }
+  ]
+}

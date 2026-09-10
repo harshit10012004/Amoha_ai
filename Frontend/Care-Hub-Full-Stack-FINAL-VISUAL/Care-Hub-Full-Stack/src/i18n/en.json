@@ -1,0 +1,15 @@
+{
+ "welcome":"Welcome to Care Hub","tagline":"Simple care, one step at a time.","getStarted":"Get Started",
+ "language":"Choose Language","role":"Who are you helping?","caregiver":"Caregiver","recipient":"Care Recipient",
+ "healthWorker":"Health Worker","profile":"Care Recipient Profile","name":"Name","continue":"Continue",
+ "home":"Home","meds":"Today's Meds","issue":"Log an Issue","plan":"Care Plan","help":"Help",
+ "take":"TAKE","skip":"SKIP","taken":"Medicine Taken ✓","savedOffline":"Saved Offline",
+ "noMeds":"No medicines added yet","addMedicine":"Add Medicine","chooseIssue":"What did you notice?",
+ "optionalNote":"Optional note","save":"Save","issueSaved":"Saved — Your issue has been recorded.",
+ "completed":"completed","noMore":"No medicines added yet","tips":"Care Tips","share":"Share on WhatsApp",
+ "login":"Existing User Login","phone":"Mobile number","sendOtp":"Send OTP","otp":"Enter OTP",
+ "verify":"Verify & Continue","dashboard":"Caregiver Dashboard","kiosk":"Kiosk Mode","logout":"Logout",
+ "offline":"You're offline. Your information is saved on this device.","syncFailed":"Sync Failed","retry":"Retry",
+ "todayProgress":"Today's progress","done":"Done","helpTopics":"Choose a help topic","back":"Back",
+ "welcomeBack":"Welcome back","savedSession":"Saved session detected","openHome":"Go to Home"
+}

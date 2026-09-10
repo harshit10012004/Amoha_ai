@@ -1,0 +1,4 @@
+import React from "react"; import {Languages} from "lucide-react"; import Button from "../components/Button"; import {useTranslation} from "react-i18next"; import {useNavigate} from "react-router-dom";
+function FlowTitle({icon,title}:{icon:React.ReactNode;title:string}){return <div className="flow-title"><span>{icon}</span><h1>{title}</h1></div>}
+
+export default function Language(){const {t,i18n}=useTranslation(),nav=useNavigate();const choose=(l:string)=>{i18n.changeLanguage(l);localStorage.setItem("carehub-lang",l);nav("/onboarding/role")};return <div className="flow-page"><FlowTitle icon={<Languages/>} title={t("language")} /><div className="choice-grid"><button onClick={()=>choose("en")} className={i18n.language==="en"?"chosen":""}>English</button><button onClick={()=>choose("hi")} className={i18n.language==="hi"?"chosen":""}>हिन्दी</button></div><Button onClick={()=>nav("/onboarding/role")}>{t("continue")}</Button></div>}

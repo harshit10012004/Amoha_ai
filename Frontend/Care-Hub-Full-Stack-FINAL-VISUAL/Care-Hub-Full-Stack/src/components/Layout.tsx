@@ -1,0 +1,2 @@
+import {ReactNode} from "react"; import Header from "./Header"; import OfflineIndicator from "./OfflineIndicator"; import {useOnlineStatus} from "../hooks/useOnlineStatus";
+export default function Layout({children}:{children:ReactNode}){const online=useOnlineStatus();return <><Header online={online}/>{!online&&<OfflineIndicator/>}<main className="container">{children}</main></>}
