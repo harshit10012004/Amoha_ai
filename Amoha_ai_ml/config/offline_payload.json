@@ -1,0 +1,22 @@
+{
+  "analysis_id": "client-generated-id",
+  "user_id": "opaque-local-id",
+  "created_at": "2026-09-10T15:00:00Z",
+  "input": {
+    "text": "Dad forgot afternoon medication.",
+    "accuracy": 0.72
+  },
+  "analysis": {
+    "status": "pending_sync",
+    "tags": [],
+    "suggestions": [],
+    "assistance_probability": null,
+    "alert_level": "info",
+    "model_version": "offline-v0.1"
+  },
+  "sync": {
+    "attempts": 0,
+    "last_attempt_at": null,
+    "synced_at": null
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "info": {
+    "name": "AMOHA Green AI Analysis API",
+    "schema": "postman_collection",
+    "version": "demo-v0.1",
+    "description": "Postman collection for the /analyze endpoint used by Orange frontend"
+  },
+  "item": [
+    {
+      "name": "Analyze Care Log",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "json",
+          "json": {
+            "text": "{{care_log_text}}",
+            "accuracy": {{accuracy}},
+            "behavioral_features": {{behavioral_features}}
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/analyze",
+          "host": [
+            "localhost"
+          ],
+          "port": [
+            "8000"
+          ],
+          "path": [
+            "analyze"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "care_log_text",
+      "value": "Dad forgot afternoon medication.",
+      "description": "Caregiver-entered care log text"
+    },
+    {
+      "key": "accuracy",
+      "value": "0.72",
+      "description": "Game accuracy score in [0, 1]"
+    },
+    {
+      "key": "behavioral_features",
+      "value": "{}",
+      "description": "Optional behavioral features JSON"
+    }
+  ]
+}

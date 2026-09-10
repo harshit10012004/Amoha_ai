@@ -1,5 +1,7 @@
 {
-  "agitation": ["angry", "restless", "yell", "frustrated", "shouting", "violent", "irritated", "agitated", "upset", "anxious", "fidgety"],
-  "sleep_issue": ["awake", "insomnia", "night", "sleepless", "sleepy", "nap", "tired", "exhausted", "restless", "drowsy", "wakeful"],
-  "nutrition": ["refused", "hungry", "eat", "food", "meal", "water", "thirsty", "appetite", "starving", "dehydrated", "nourish"]
+  "agitation": ["angry", "restless", "yell", "frustrated", "shouting", "violent", "irritated", "agitated", "upset", "anxious", "fidgety", "agitation"],
+  "sleep_issue": ["awake", "insomnia", "night", "sleepless", "sleepy", "nap", "tired", "exhausted", "restless", "drowsy", "wakeful", "sleep_issue"],
+  "med_missed": ["forgot", "missed", "medication", "pill", "dose", "tablet", "skip", "med_missed"],
+  "confusion": ["confused", "confusion", "disoriented", "lost", "bewildered", "confusion"],
+  "good_day": ["good", "great", "well", "fine", "positive", "excellent", "good_day"]
 }

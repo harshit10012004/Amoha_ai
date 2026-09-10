@@ -1,0 +1,10 @@
+{
+  "module": "amoha-green-ai",
+  "version": "demo-v0.1",
+  "offline_capable": true,
+  "network_calls_required": false,
+  "target_bundle_size_kb": 100,
+  "actual_bundle_size_kb": null,
+  "model_format": "joblib_or_rules",
+  "notes": "Measure actual size before release."
+}

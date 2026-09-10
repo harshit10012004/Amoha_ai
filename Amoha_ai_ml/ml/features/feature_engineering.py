@@ -2,72 +2,138 @@ import numpy as np
 import pandas as pd
 
 
-def extract_features_from_log(text, accuracy):
-    """Extract basic features from care log text and accuracy."""
-    text_lower = text.lower()
-
-    features = {}
-
-    keyword_map = {
-        'agitation': ['angry', 'restless', 'yell', 'frustrated', 'shouting', 'violent', 'irritated', 'agitated', 'upset', 'anxious', 'fidgety'],
-        'sleep_issue': ['awake', 'insomnia', 'night', 'sleepless', 'sleepy', 'nap', 'tired', 'exhausted', 'restless', 'drowsy', 'wakeful'],
-        'nutrition': ['refused', 'hungry', 'eat', 'food', 'meal', 'water', 'thirsty', 'appetite', 'starving', 'dehydrated', 'nourish'],
-    }
-
-    tag_counts = {}
-    for tag, words in keyword_map.items():
-        count = sum(1 for word in words if word in text_lower)
-        if count > 0:
-            tag_counts[tag] = count
-
-    features['tag_counts'] = tag_counts
-    features['accuracy'] = accuracy
-    features['word_count'] = len(text.split())
-
-    return features
+VALIDATION_RULES = {
+    'completion_rate': (0.0, 1.0),
+    'missed_rate': (0.0, 1.0),
+    'response_delay': (0.0, np.inf),
+    'reminder_count': (0, np.inf),
+    'game_accuracy': (0.0, 1.0),
+    'avg_game_time': (0.0, np.inf),
+    'recent_accuracy': (0.0, 1.0),
+    'time_of_day': None,
+    'agitation_count_7d': (0, np.inf),
+    'sleep_issue_count_7d': (0, np.inf),
+    'med_missed_count_7d': (0, np.inf),
+    'confusion_count_7d': (0, np.inf),
+    'positive_day_ratio': (0.0, 1.0),
+    'evening_agitation_rate': (0.0, 1.0),
+}
 
 
-def build_feature_vector(features_dict, behavioral_features=None):
-    """Build a numeric feature vector from extracted features."""
-    vec = []
-
-    tag_counts = features_dict.get('tag_counts', {})
-    for tag in ['agitation', 'sleep_issue', 'nutrition']:
-        vec.append(tag_counts.get(tag, 0))
-
-    accuracy = features_dict.get('accuracy', 0.5)
-    vec.append(accuracy)
-
-    if behavioral_features:
-        vec.extend([
-            behavioral_features.get('completion_rate', 0.0),
-            behavioral_features.get('missed_rate', 0.0),
-            behavioral_features.get('response_delay', 0.0),
-            behavioral_features.get('reminder_count', 0.0),
-            behavioral_features.get('game_accuracy', 0.5),
-            behavioral_features.get('avg_game_time', 0.0),
-            behavioral_features.get('recent_accuracy', 0.5),
-            behavioral_features.get('time_of_day', 'day'),
-        ])
-    else:
-        vec.extend([0.0] * 8)
-
-    return np.array(vec, dtype=np.float64)
+def validate_numeric(value, field_name, min_val=None, max_val=None):
+    """Validate a numeric value is within optional min/max bounds."""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name} must be numeric, got {value!r}")
+    if min_val is not None and v < min_val:
+        raise ValueError(f"{field_name} must be >= {min_val}, got {v}")
+    if max_val is not None and v > max_val:
+        raise ValueError(f"{field_name} must be <= {max_val}, got {v}")
+    return v
 
 
-def compute_risk_signals(features_dict):
-    """Compute risk signals based on features (cognitive score, diabetes, APOE signals)."""
-    risk = {}
+def validate_record(record: dict) -> dict:
+    """Validate and clean a single record dict, returning sanitized features.
 
-    tag_counts = features_dict.get('tag_counts', {})
-    accuracy = features_dict.get('accuracy', 0.5)
+    Returns a dict with all feature keys filled with validated values.
+    Missing or invalid values are replaced with safe defaults.
+    """
+    cleaned = {}
+    for field, rule in VALIDATION_RULES.items():
+        if rule is None:
+            # Non-numeric field (e.g., time_of_day); keep as-is or default to None
+            if field in record:
+                cleaned[field] = record[field]
+            else:
+                cleaned[field] = None
+            continue
 
-    cognitive_score = round(accuracy * 100, 1)
+        min_val, max_val = rule
+        if field in record:
+            try:
+                cleaned[field] = validate_numeric(
+                    record[field], field, min_val, max_val
+                )
+            except (ValueError, TypeError):
+                if min_val is not None and max_val is not None:
+                    cleaned[field] = (min_val + max_val) / 2
+                elif min_val is not None:
+                    cleaned[field] = min_val
+                elif max_val is not None:
+                    cleaned[field] = max_val
+                else:
+                    cleaned[field] = 0.0
+        else:
+            # Missing field: use midpoint of valid range
+            if min_val is not None and max_val is not None:
+                cleaned[field] = (min_val + max_val) / 2
+            elif min_val is not None:
+                cleaned[field] = min_val
+            elif max_val is not None:
+                cleaned[field] = max_val
+            else:
+                cleaned[field] = 0.0
+    return cleaned
 
-    diabetes_signal = 1 if tag_counts.get('nutrition', 0) > 0 and accuracy < 0.7 else 0
 
-    risk['cognitive_score'] = cognitive_score
-    risk['diabetes_signal'] = diabetes_signal
-    risk['apoe_risk'] = 0
+FEATURE_ORDER = [
+    'completion_rate',
+    'missed_rate',
+    'response_delay',
+    'reminder_count',
+    'game_accuracy',
+    'avg_game_time',
+    'recent_accuracy',
+    'time_of_day',
+    'agitation_count_7d',
+    'sleep_issue_count_7d',
+    'med_missed_count_7d',
+    'confusion_count_7d',
+    'positive_day_ratio',
+    'evening_agitation_rate',
+]
 
-    return risk
+
+def build_feature_frame(records: list[dict]) -> pd.DataFrame:
+    """Build a pandas DataFrame from a list of feature record dicts.
+
+    Each record may contain a subset of the supported feature fields.
+    Missing fields are filled with safe defaults. Numeric ranges are validated.
+
+    Parameters
+    ----------
+    records : list[dict]
+        List of feature dicts, typically from care-log analysis or
+        behavioral feature input.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with stable column order and validated values.
+    """
+    if not records:
+        return pd.DataFrame(columns=FEATURE_ORDER)
+
+    rows = []
+    for record in records:
+        cleaned = validate_record(record)
+        row = {field: cleaned.get(field, 0.0) for field in FEATURE_ORDER}
+        rows.append(row)
+
+    df = pd.DataFrame(rows, columns=FEATURE_ORDER)
+    return df
+
+
+def get_feature_order() -> list[str]:
+    """Return the ordered list of feature names in stable sequence.
+
+    The order is designed to match the feature vectors expected by
+    the assistance model and other ML components.
+
+    Returns
+    -------
+    list[str]
+        Ordered feature names.
+    """
+    return list(FEATURE_ORDER)

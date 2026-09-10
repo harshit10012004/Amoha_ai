@@ -1,0 +1,16 @@
+{
+  "tags": {
+    "agitation": "Agitation detected. Try a calm, quiet environment.",
+    "sleep_issue": "A sleep concern was noticed. Consider a consistent wind-down routine.",
+    "med_missed": "A missed medication entry was noticed. Please check the caregiver plan.",
+    "confusion": "A confusion signal was noticed. Offer calm, simple guidance.",
+    "good_day": "A positive day was recorded."
+  },
+  "fallback": "Your log was saved. More support information will appear soon.",
+  "assistance_high": "Your routine analysis suggests additional support may be helpful.",
+  "assistance_low": "Your routine is on track. Keep up the good work.",
+  "difficulty_increase": "Consider increasing the game difficulty gradually.",
+  "difficulty_decrease": "Consider reducing the game difficulty for a calmer experience.",
+  "difficulty_keep": "Keep the current game difficulty.",
+  "caregiver_review": "Caregiver review suggested."
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "AMOHA Green AI Response Schema",
+  "type": "object",
+  "properties": {
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "agitation",
+              "sleep_issue",
+              "med_missed",
+              "confusion",
+              "good_day",
+              "general_wellness"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "source": {
+            "type": "string",
+            "enum": ["local_rule"],
+            "default": "local_rule"
+          },
+          "negated": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["name", "confidence", "source"]
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "routine_support",
+              "caregiver_review",
+              "game_adjustment"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": ["type", "text", "reason"]
+      },
+      "description": "List of supportive caregiver suggestions."
+    },
+    "game_difficulty": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Difficulty level: 1=Easy, 2=Medium, 3=Hard"
+        },
+        "action": {
+          "type": "string",
+          "enum": ["reduce", "keep", "increase"],
+          "description": "Recommended action for game difficulty."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for the difficulty recommendation."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Confidence level of the recommendation."
+        }
+      },
+      "required": ["level", "action", "reason", "confidence"],
+      "description": "Adaptive game difficulty output."
+    },
+    "assistance_probability": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Probability that additional routine assistance may be useful. Not a diagnosis."
+    },
+    "alert_level": {
+      "type": "string",
+      "enum": ["info", "support", "caregiver_review"],
+      "description": "Support-oriented alert level."
+    },
+    "explanation": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Human-readable explanation fragment."
+      },
+      "description": "List of explanation fragments."
+    },
+    "model_version": {
+      "type": "string",
+      "description": "Version identifier for the AI model/analysis."
+    }
+  },
+  "required": ["tags", "suggestions", "game_difficulty", "assistance_probability", "alert_level", "explanation", "model_version"],
+  "additionalProperties": false,
+  "example": {
+    "tags": [
+      {
+        "name": "med_missed",
+        "confidence": 0.91,
+        "source": "local_rule"
+      }
+    ],
+    "suggestions": [
+      {
+        "type": "routine_support",
+        "text": "Please check the caregiver plan for medication timing.",
+        "reason": "A missed medication entry was noticed."
+      }
+    ],
+    "game_difficulty": {
+      "level": 2,
+      "action": "keep",
+      "reason": "Accuracy is within the target range.",
+      "confidence": "medium"
+    },
+    "assistance_probability": 0.42,
+    "alert_level": "support",
+    "explanation": [
+      "Recent missed-rate and response-delay features contributed to the assistance estimate."
+    ],
+    "model_version": "demo-v0.1"
+  }
+}
