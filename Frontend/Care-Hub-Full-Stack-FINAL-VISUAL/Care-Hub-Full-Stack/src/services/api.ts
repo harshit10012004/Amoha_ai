@@ -31,5 +31,6 @@ export const api={
   getAboutMe:()=>request('/about-me'),
   updateAboutMe:(payload:unknown)=>request('/about-me',{method:'PUT',body:JSON.stringify(payload)}),
   getMemories:()=>request('/memories'),
-  getTimeline:()=>request('/timeline')
+  getTimeline:()=>request('/timeline'),
+  analyzeCareLog:(text:string, accuracy:number, behavioralFeatures?:{})=>request('/api/analyze-care-log',{method:'POST',body:JSON.stringify({text, accuracy, behavioralFeatures})})
 };
