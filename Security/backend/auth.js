@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 const secret = process.env.JWT_SECRET || 'dev-only-secret';
 export function signUser(user){ 
   const data = {sub:user.id,role:user.role,consentVersion:user.consentVersion};
-  return jwt.sign(data, secret, {expiresIn:'24h'}); 
+  return jwt.sign(data, secret, {expiresIn:'7d'}); 
 }
 export function auth(req,res,next){
   const header=req.headers.authorization || '';

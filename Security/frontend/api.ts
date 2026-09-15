@@ -15,6 +15,7 @@ export const api={
   verifyOtp:(phone:string,otp:string)=>request('/auth/verify-otp',{method:'POST',body:JSON.stringify({phone,otp})}),
   me:()=>request('/me'),
   updateConsent:(version:string)=>request('/consent',{method:'POST',body:JSON.stringify({version})}),
+  withdrawConsent:()=>request('/consent/withdraw',{method:'POST'}),
   getMedicines:()=>request('/medicines'),
   createMedicine:(payload:unknown)=>request('/medicines',{method:'POST',body:JSON.stringify(payload)}),
   markMedicineTaken:(id:number)=>request(`/medicines/${id}/taken`,{method:'POST'}),

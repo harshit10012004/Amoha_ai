@@ -1,25 +1,12 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { readDb, updateDb } from './store.js';
 import { auth, signUser } from './auth.js';
-import { encryptData, decryptData } from './encryption.js';
-import { redactPII } from './server.js';
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
 const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
-
-// Security headers
-app.use(helmet());
-
-// Rate limiting - prevent OTP brute force (max 5 attempts per 15 min per IP)
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many requests, please try again later 15 minutes.' });
-app.use('/api/auth/request-otp', limiter);
-
-// CORS
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
@@ -27,19 +14,10 @@ const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data
 const fail = (res, message, status = 400) => res.status(status).json({ ok: false, message });
 const userOf = async id => (await readDb()).users.find(u => u.id === id);
 
-const redactPII = (text) => {
-  if (!text) return text;
-  return text
-    .replace(/\b\d{10,15}\b/g, '[PHONE REDACTED]')
-    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN REDACTED]')
-    .replace(/\b[A-Z][a-z]+\s[A-Z][a-z]+\b/g, '[NAME REDACTED]')
-    .replace(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, '[DATE REDACTED]');
-};
-
 app.get('/api/health', (req, res) => ok(res, { service: 'care-hub-api', status: 'healthy', storage: 'json-demo', time: new Date().toISOString() }));
 
 // Auth
-app.post('/api/auth/request-otp', validateInput, async (req, res) => {
+app.post('/api/auth/request-otp', async (req, res) => {
   const phone = String(req.body.phone || '').replace(/\D/g, '');
   if (phone.length < 10) return fail(res, 'Enter a valid phone number');
   const db = await readDb();
@@ -51,11 +29,10 @@ app.post('/api/auth/request-otp', validateInput, async (req, res) => {
   const code = process.env.DEMO_OTP || '123456';
   db.otp[phone] = { code, expiresAt: Date.now() + 5 * 60 * 1000 };
   await updateDb(d => { d.users = db.users; d.otp = db.otp; });
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: null, endpoint: '/auth/request-otp', action: 'create', success: true });
   ok(res, { message: 'OTP generated', demoOtp: code, user: { id: user.id, name: user.name, role: user.role } });
 });
 
-app.post('/api/auth/verify-otp', validateInput, async (req, res) => {
+app.post('/api/auth/verify-otp', async (req, res) => {
   const phone = String(req.body.phone || '').replace(/\D/g, '');
   const code = String(req.body.otp || '');
   const db = await readDb();
@@ -66,25 +43,17 @@ app.post('/api/auth/verify-otp', validateInput, async (req, res) => {
     user = { id: `u${Date.now()}`, name: 'Care Recipient', phone, role: 'patient', language: 'en', caregiverIds: [], consentVersion: 'consent-v1.0' };
     db.users.push(user);
   }
-  if (!user.consentVersion) user.consentVersion = 'consent-v1.0';
+  
   delete db.otp[phone];
   await updateDb(d => { d.users = db.users; d.otp = db.otp; });
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: user.id, endpoint: '/auth/verify-otp', action: 'create', success: true, consentVersion: user.consentVersion });
   ok(res, { token: signUser(user), user });
 });
 
-app.get('/api/me', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/me', action: 'read', success: true });
-  ok(res, await userOf(req.user.sub));
-});
+app.get('/api/me', auth, async (req, res) => ok(res, await userOf(req.user.sub)));
 
 // Patient medicines
-app.get('/api/medicines', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/medicines', action: 'read', success: true });
-  ok(res, (await readDb()).medicines.filter(x => x.userId === req.user.sub));
-});
+app.get('/api/medicines', auth, async (req, res) => ok(res, (await readDb()).medicines.filter(x => x.userId === req.user.sub)));
 app.post('/api/medicines', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/medicines', action: 'create', success: true });
   const item = await updateDb(db => {
     const next = { id: Date.now(), userId: req.user.sub, name: req.body.name || 'Medicine', time: req.body.time || '08:00 AM', dosage: req.body.dosage || '1 tablet', status: 'pending' };
     db.medicines.push(next); return next;
@@ -93,7 +62,6 @@ app.post('/api/medicines', auth, async (req, res) => {
 });
 for (const [action, status] of [['taken', 'taken'], ['skipped', 'skipped']]) {
   app.post(`/api/medicines/:id/${action}`, auth, async (req, res) => {
-    await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: `/medicines/${id}/${action}`, action: 'update', success: true });
     const item = await updateDb(db => {
       const m = db.medicines.find(x => x.id === Number(req.params.id) && x.userId === req.user.sub);
       if (!m) return null;
@@ -105,12 +73,8 @@ for (const [action, status] of [['taken', 'taken'], ['skipped', 'skipped']]) {
 }
 
 // Care plan
-app.get('/api/care-plan', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/care-plan', action: 'read', success: true });
-  ok(res, (await readDb()).carePlan.filter(x => x.userId === req.user.sub));
-});
+app.get('/api/care-plan', auth, async (req, res) => ok(res, (await readDb()).carePlan.filter(x => x.userId === req.user.sub)));
 app.patch('/api/care-plan/:id', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/care-plan/:id', action: 'update', success: true });
   const item = await updateDb(db => {
     const p = db.carePlan.find(x => x.id === Number(req.params.id) && x.userId === req.user.sub);
     if (!p) return null; p.completed = !p.completed; p.updatedAt = new Date().toISOString(); return p;
@@ -127,7 +91,7 @@ app.post('/api/audit', async (req, res) => {
   ok(res, { entry: auditLog.length });
 });
 
-app.post('/api/consent', auth, validateInput, async (req, res) => {
+app.post('/api/consent', auth, async (req, res) => {
   await updateDb(db => {
     const user = db.users.find(u => u.id === req.user.sub);
     if (user) user.consentVersion = req.body.version || 'consent-v1.0';
@@ -137,47 +101,14 @@ app.post('/api/consent', auth, validateInput, async (req, res) => {
   ok(res, { message: 'Consent recorded' });
 });
 
-app.post('/api/consent/withdraw', auth, validateInput, async (req, res) => {
-  await updateDb(db => {
-    const user = db.users.find(u => u.id === req.user.sub);
-    if (user) {
-      user.consentVersion = null;
-      // Mark historical care logs as consent withdrawn
-      db.careLogs.forEach(log => {
-        if (log.userId === user.id) {
-          log.consentWithdrawn = log.consentWithdrawn || true;
-        }
-      });
-    }
-    return db;
-  });
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/consent/withdraw', action: 'withdraw', success: true });
-  ok(res, { message: 'Consent withdrawn, historical data marked per retention policy' });
-});
-
 // Care logs
-app.post('/api/care-logs', auth, validateInput, async (req, res) => {
-  const note = redactPII(req.body.note || '');
-  const encrypted = encryptData(note);
+app.post('/api/care-logs', auth, async (req, res) => {
   const log = await updateDb(db => {
-    const item = { id: Date.now(), userId: req.user.sub, category: req.body.category || 'other', note: encrypted.encryptedData, noteIv: encrypted.iv, noteAuthTag: encrypted.authTag, timestamp: req.body.timestamp || new Date().toISOString(), syncStatus: 'synced' };
+    const item = { id: Date.now(), userId: req.user.sub, category: req.body.category || 'other', note: req.body.note || '', timestamp: req.body.timestamp || new Date().toISOString(), syncStatus: 'synced' };
     db.careLogs.push(item); return item;
   });
   await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/care-logs', action: 'create', success: true });
-  ok(res, { ...log, noteEncryption: { iv: encrypted.iv, authTag: encrypted.authTag } }, 201);
-});
-
-// Decrypt care logs when retrieving
-app.get('/api/care-logs', auth, async (req, res) => {
-  const db = await readDb();
-  const logs = db.careLogs.filter(l => l.userId === req.user.sub).sort((a,b) => b.timestamp.localeCompare(a.timestamp)).map(l => {
-    let note = l.note;
-    if (l.noteIv && l.noteAuthTag) {
-      note = decryptData(l.note, l.noteIv, l.noteAuthTag);
-    }
-    return { ...l, note };
-  });
-  ok(res, logs);
+  ok(res, log, 201);
 });
 
 // Suggestions
@@ -218,33 +149,23 @@ app.post('/api/analyze', auth, async (req, res) => {
 });
 
 // Reminders
-app.get('/api/reminders', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/reminders', action: 'read', success: true });
-  ok(res, (await readDb()).reminders.filter(x => x.userId === req.user.sub));
-});
+app.get('/api/reminders', auth, async (req, res) => ok(res, (await readDb()).reminders.filter(x => x.userId === req.user.sub)));
 app.post('/api/reminders', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/reminders', action: 'create', success: true });
   const reminder = await updateDb(db => { const item = { id: Date.now(), userId: req.user.sub, title: req.body.title || 'Reminder', time: req.body.time || '09:00 AM', enabled: true }; db.reminders.push(item); return item; });
   ok(res, reminder, 201);
 });
 app.patch('/api/reminders/:id', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: `/reminders/${id}`, action: 'update', success: true });
   const reminder = await updateDb(db => { const item = db.reminders.find(x => x.id === Number(req.params.id) && x.userId === req.user.sub); if (!item) return null; item.enabled = typeof req.body.enabled === 'boolean' ? req.body.enabled : !item.enabled; return item; });
   if (!reminder) return fail(res, 'Reminder not found', 404); ok(res, reminder);
 });
 
 // Notifications
-app.get('/api/notifications', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/notifications', action: 'read', success: true });
-  ok(res, (await readDb()).notifications.filter(x => x.userId === req.user.sub));
-});
+app.get('/api/notifications', auth, async (req, res) => ok(res, (await readDb()).notifications.filter(x => x.userId === req.user.sub)));
 app.post('/api/notifications', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/notifications', action: 'create', success: true });
   const n = await updateDb(db => { const item = { id: Date.now(), userId: req.user.sub, title: req.body.title || 'Care Hub notification', body: req.body.body || '', createdAt: new Date().toISOString(), read: false }; db.notifications.push(item); return item; });
   ok(res, n, 201);
 });
 app.patch('/api/notifications/:id/read', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: `/notifications/${id}/read`, action: 'update', success: true });
   const n = await updateDb(db => { const item = db.notifications.find(x => x.id === Number(req.params.id) && x.userId === req.user.sub); if (!item) return null; item.read = true; return item; });
   if (!n) return fail(res, 'Notification not found', 404); ok(res, n);
 });
@@ -278,7 +199,6 @@ app.get('/api/caregiver/patients', auth, async (req, res) => {
 });
 
 app.get('/api/caregiver/patients/:id/summary', auth, async (req, res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/caregiver/patients/:id/summary', action: 'read', success: true });
   if (req.user.role !== 'caregiver' && req.user.role !== 'admin') return fail(res, 'Caregiver access required', 403);
   const db = await readDb(); const patient = db.users.find(u => u.id === req.params.id && u.role === 'patient');
   if (!patient) return fail(res, 'Patient not found', 404);
@@ -289,20 +209,15 @@ app.get('/api/caregiver/patients/:id/summary', auth, async (req, res) => {
 
 // Personalized care features
 app.get('/api/about-me', auth, async (req,res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/about-me', action: 'read', success: true });
   const db = await readDb();
   ok(res, db.aboutMe?.find(x=>x.userId===req.user.sub) || {userId:req.user.sub,name:(db.users.find(u=>u.id===req.user.sub)||{}).name||'Care Recipient',favoriteMusic:'90s Bollywood',likes:'Morning tea, gardening, cricket',dislikes:'Loud noises, crowded places',helps:'Speak slowly. Give one instruction at a time.'});
 });
 app.put('/api/about-me', auth, async (req,res) => {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/about-me', action: 'update', success: true });
   const item = await updateDb(db=>{ db.aboutMe=db.aboutMe||[]; let x=db.aboutMe.find(v=>v.userId===req.user.sub); if(!x){x={userId:req.user.sub};db.aboutMe.push(x)} Object.assign(x,{name:req.body.name||x.name||'Care Recipient',favoriteMusic:req.body.favoriteMusic||'',likes:req.body.likes||'',dislikes:req.body.dislikes||'',helps:req.body.helps||''}); return x; });
   ok(res,item);
 });
 app.get('/api/memories', auth, async (req,res)=>ok(res,(await readDb()).memories?.filter(x=>x.userId===req.user.sub)||[]));
-app.get('/api/timeline', auth, async (req,res)=> {
-  await auditLog.push({ timestamp: new Date().toISOString(), userId: req.user.sub, endpoint: '/timeline', action: 'read', success: true });
-  ok(res,(await readDb()).careLogs.filter(x=>x.userId===req.user.sub).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,30));
-});
+app.get('/api/timeline', auth, async (req,res)=>ok(res,(await readDb()).careLogs.filter(x=>x.userId===req.user.sub).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,30)));
 
 app.get('/api/openapi.json', (req, res) => ok(res, { openapi: '3.0.3', info: { title: 'Care Hub API', version: '1.0.0' }, servers: [{ url: `http://localhost:${port}/api` }], paths: { '/health': { get: {} }, '/auth/request-otp': { post: {} }, '/auth/verify-otp': { post: {} }, '/medicines': { get: {}, post: {} }, '/care-plan': { get: {} }, '/care-logs': { get: {}, post: {} }, '/reminders': { get: {}, post: {} }, '/dashboard': { get: {} }, '/caregiver/patients': { get: {} } } }));
 app.use((req, res) => fail(res, 'API route not found', 404));
