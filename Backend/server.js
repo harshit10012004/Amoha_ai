@@ -56,6 +56,10 @@ app.post("/users", async (req, res) => {
 // POST a new care recipient
 app.post("/care-recipients", async (req, res) => {
     const { name, age, dementia_stage, caregiver_id } = req.body;
+    const requestingCaregiverId = req.headers["x-caregiver-id"];
+
+    const allowed = await verifyOwnership(requestingCaregiverId, caregiver_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to add care recipient" });
 
     const { data, error } = await supabase
         .from("care_recipients")
@@ -68,7 +72,7 @@ app.post("/care-recipients", async (req, res) => {
 });
 
 
-//Get care-log by care_recipient_id or gets all meds
+//Get meds by care_recipient_id or gets all meds
 app.get("/meds", async (req, res) => {
     const { care_recipient_id } = req.query;
     const caregiver_id = req.headers["x-caregiver-id"];
@@ -88,6 +92,11 @@ app.get("/meds", async (req, res) => {
 // POST a new med
 app.post("/meds", async (req, res) => {
     const { care_recipient_id, name, dosage, time_of_day, frequency } = req.body;
+    const caregiver_id = req.headers["x-caregiver-id"];
+
+    const allowed = await verifyOwnership(caregiver_id, care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to add data for this patient" });
+
     const { data, error } = await supabase
         .from("meds")
         .insert([{ care_recipient_id, name, dosage, time_of_day, frequency }])
@@ -97,10 +106,16 @@ app.post("/meds", async (req, res) => {
 });
 
 
-
 //Get care-log by care_recipient_id or get all all care logs
 app.get("/care-logs", async (req, res) => {
     const { care_recipient_id } = req.query;
+    const caregiver_id = req.headers["x-caregiver-id"];
+
+    if (care_recipient_id && caregiver_id) {
+        const allowed = await verifyOwnership(caregiver_id, care_recipient_id);
+        if (!allowed) return res.status(403).json({ error: "Not authorized to view this patient's data" });
+    }
+
     let query = supabase.from("care_logs").select("*");
     if (care_recipient_id) {
         query = query.eq("care_recipient_id", care_recipient_id);
@@ -112,10 +127,15 @@ app.get("/care-logs", async (req, res) => {
 
 // POST a new care log
 app.post("/care-logs", async (req, res) => {
-    const { care_recipient_id, logged_by, entry_text } = req.body;
+    const { care_recipient_id, logged_by, entry_text, tag, suggestion, alert_level, game_accuracy } = req.body;
+    const caregiver_id = req.headers["x-caregiver-id"];
+
+    const allowed = await verifyOwnership(caregiver_id, care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to add data for this patient" });
+
     const { data, error } = await supabase
         .from("care_logs")
-        .insert([{ care_recipient_id, logged_by, entry_text }])
+        .insert([{ care_recipient_id, logged_by, entry_text, tag, suggestion, alert_level, game_accuracy }])
         .select();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ message: "Care log added successfully", data });
@@ -125,7 +145,15 @@ app.post("/care-logs", async (req, res) => {
 // UPDATE a med
 app.put("/meds/:id", async (req, res) => {
     const { id } = req.params;
+    const caregiver_id = req.headers["x-caregiver-id"];
     const { name, dosage, time_of_day, frequency } = req.body;
+
+    const { data: med } = await supabase.from("meds").select("care_recipient_id").eq("id", id).maybeSingle();
+    if (!med) return res.status(404).json({ error: "Medicine not found" });
+
+    const allowed = await verifyOwnership(caregiver_id, med.care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to update this record" });
+
     const { data, error } = await supabase
         .from("meds")
         .update({ name, dosage, time_of_day, frequency })
@@ -138,6 +166,15 @@ app.put("/meds/:id", async (req, res) => {
 // DELETE a med
 app.delete("/meds/:id", async (req, res) => {
     const { id } = req.params;
+    const caregiver_id = req.headers["x-caregiver-id"];
+
+    // look up which patient this med belongs to
+    const { data: med } = await supabase.from("meds").select("care_recipient_id").eq("id", id).maybeSingle();
+    if (!med) return res.status(404).json({ error: "Medicine not found" });
+
+    const allowed = await verifyOwnership(caregiver_id, med.care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to delete this record" });
+
     const { error } = await supabase.from("meds").delete().eq("id", id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ message: "Medicine deleted successfully" });
@@ -146,10 +183,18 @@ app.delete("/meds/:id", async (req, res) => {
 // UPDATE a care log
 app.put("/care-logs/:id", async (req, res) => {
     const { id } = req.params;
-    const { entry_text, tag } = req.body;
+    const caregiver_id = req.headers["x-caregiver-id"];
+    const { entry_text, tag, suggestion, alert_level } = req.body;
+
+    const { data: log } = await supabase.from("care_logs").select("care_recipient_id").eq("id", id).maybeSingle();
+    if (!log) return res.status(404).json({ error: "Care log not found" });
+
+    const allowed = await verifyOwnership(caregiver_id, log.care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to update this record" });
+
     const { data, error } = await supabase
         .from("care_logs")
-        .update({ entry_text, tag })
+        .update({ entry_text, tag, suggestion, alert_level })
         .eq("id", id)
         .select();
     if (error) return res.status(500).json({ error: error.message });
@@ -159,6 +204,14 @@ app.put("/care-logs/:id", async (req, res) => {
 // DELETE a care log
 app.delete("/care-logs/:id", async (req, res) => {
     const { id } = req.params;
+    const caregiver_id = req.headers["x-caregiver-id"];
+
+    const { data: log } = await supabase.from("care_logs").select("care_recipient_id").eq("id", id).maybeSingle();
+    if (!log) return res.status(404).json({ error: "Care log not found" });
+
+    const allowed = await verifyOwnership(caregiver_id, log.care_recipient_id);
+    if (!allowed) return res.status(403).json({ error: "Not authorized to delete this record" });
+
     const { error } = await supabase.from("care_logs").delete().eq("id", id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ message: "Care log deleted successfully" });
