@@ -56,3 +56,10 @@ export async function trySync() {
     }
   }
 }
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    trySync();
+  });
+
+  trySync();
+}
