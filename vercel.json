@@ -1,6 +1,8 @@
 {
   "functions": {
-    "Backend/api/index.js": {}
+    "Backend/api/index.js": {
+      "runtime": "nodejs20.x"
+    }
   },
   "routes": [
     { "source": "/api/(.*)", "destination": "Backend/api/index.js" }
