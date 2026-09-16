@@ -5,6 +5,6 @@
     }
   },
   "routes": [
-    { "source": "/(.*)", "destination": "api/index.js" }
+    { "source": "/api/(.*)", "destination": "api/index.js" }
   ]
 }
