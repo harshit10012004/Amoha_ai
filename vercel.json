@@ -1,10 +1,10 @@
 {
   "functions": {
-    "api/index.js": {
+    "Backend/api/index.js": {
       "runtime": "nodejs20.x"
     }
   },
   "routes": [
-    { "source": "/api/(.*)", "destination": "api/index.js" }
+    { "source": "/api/(.*)", "destination": "Backend/api/index.js" }
   ]
 }
