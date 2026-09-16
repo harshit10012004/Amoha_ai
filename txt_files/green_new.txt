@@ -1,0 +1,109 @@
+Priority-based task list (merged with AMOHA Green)
+P0 – Core ML backbone and data flow
+Set up ML folder structure and baseline stack
+
+Create ml/ with subfolders: data/, features/, models/, training/, inference/, explainability/, utils/.
+
+Add baseline dependencies to requirements.txt: numpy, pandas, scikit-learn, scipy, matplotlib, shap, joblib, pydantic.
+
+Implement feature engineering from structured + care-log signals
+
+Build ml/features/feature_engineering.py using pandas + NumPy.
+
+Inputs: structured events (completion_rate, missed_rate, response_delay, reminder_count, game_accuracy, avg_game_time, recent_accuracy, time_of_day) and NLP tags from care logs (agitation, sleep_issue, med_missed, confusion, good_day).
+
+Outputs: a feature vector per user per day/week, including rolling 7-day aggregates of tag counts and rates.
+
+Build assistance/forgetting-pattern model
+
+Implement a simple model (Logistic Regression or Random Forest) in ml/models/assistance_model.py.
+
+Target: binary “needs_assistance” or “high_risk_miss” label derived from historical misses / low completion.
+
+Output: assistance probability only, no diagnosis.
+
+Persist model with joblib and expose a clean inference function.
+
+Create predictor inference API for Yellow
+
+Implement ml/inference/predictor.py with a function like:
+predict_assistance_and_recommend(user_id, structured_features, care_log_tags) -> {assistance_prob, explanation, reminder_suggestion}.
+
+Ensure this can be called by Yellow as a simple HTTP or function call.
+
+P1 – Care-log NLP and adaptive reminders
+Build rule-based care-log NLP tagger
+
+Implement src/nlp/tagger.py to tag entries with: agitation, sleep_issue, med_missed, confusion, good_day.
+
+Include simple negation handling and time-of-day hints (e.g., “last night”, “after lunch”).
+
+Provide tests/test_tagger.py and examples/sample_logs.json.
+
+Integrate tagger into feature engineering
+
+Extend feature_engineering.py to consume tagger outputs and compute:
+
+agitation_count_7d, sleep_issue_count_7d, med_missed_count_7d, confusion_count_7d, positive_day_rate, etc.
+
+Ensure these features are used by the assistance model.
+
+Implement adaptive medication reminder logic (v0.1)
+
+Build src/reminders/adaptive_logic.py as a rule-based controller:
+
+Use adherence history and tags (especially med_missed, confusion, sleep_issue) to suggest changes in reminder time, frequency, or modality.
+
+Enforce feedback-loop prevention: no auto-increase on a single miss; require thresholds and cooldowns.
+
+P2 – Recommendations, evaluation, and explainability
+Build recommendation engine (MVP)
+
+Implement ml/models/recommendation_engine.py using weighted scoring over:
+
+Assistance probability
+
+Tag trends (e.g., rising agitation, repeated missed meds)
+
+Time-of-day patterns
+
+Output: concrete suggestions (reminder shift, extra reminder, caregiver CC, calming routine suggestion).
+
+Add model evaluation scripts
+
+Create ml/training/eval_models.py to compute precision, recall, F1, ROC-AUC, and confusion matrix on held-out data.
+
+Include a simple synthetic dataset generator in ml/data/synthetic_data.py for quick iteration.
+
+Add SHAP explainability module
+
+Implement ml/explainability/shap_explainer.py to generate caregiver-facing explanations:
+
+“Higher assistance probability driven mainly by recent missed meds and evening agitation.”
+
+Keep explanations non-clinical and routine-focused.
+
+P3 – Demo polish and safety
+Weekly care-tip generator
+
+Implement src/tips/weekly_tip_generator.py that:
+
+Aggregates weekly signals (tags, assistance probs, adherence).
+
+Produces 1–2 sentence tips with a short rationale.
+
+Cold-start and safety defaults
+
+Add logic in feature engineering / recommendation engine to handle users with no history:
+
+Use caregiver-defined defaults and baseline difficulty / reminder settings.
+
+Document the safety boundary clearly in docs/safety_and_scope.md.
+
+Documentation and tests for all modules
+
+Ensure each module has:
+
+Basic docstrings and a short README section.
+
+At least minimal tests and example usage.
